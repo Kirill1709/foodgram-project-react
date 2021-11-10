@@ -3,6 +3,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .filters import IngredientFilter, RecipeFilter
+
 from .models import (Favourites, Ingredients, IngredientsQuanity,
                      Recipe, ShopingCart, Tag)
 from .permissions import IsAuthorOrAdminOrReadOnly
@@ -17,6 +19,7 @@ from reportlab.lib.pagesizes import letter
 from rest_framework.decorators import api_view, permission_classes
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 @api_view(['GET'])
@@ -65,16 +68,23 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeCreateSerializer
     permission_classes = (IsAuthorOrAdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filter_class = RecipeFilter
 
 
 class IngredientsViewSet(ListDetailViewSet):
     queryset = Ingredients.objects.all()
     serializer_class = IngredientSerizalizer
+    pagination_class = None
+    filter_backends = (DjangoFilterBackend,)
+    filter_class = IngredientFilter
 
 
 class TagsViewSet(ListDetailViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    pagination_class = None
+    permission_classes = [permissions.AllowAny, ]
 
 
 class FavoriteRecipeView(APIView):
