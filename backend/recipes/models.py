@@ -64,6 +64,10 @@ class IngredientsQuanity(models.Model):
     quanity = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)])
 
+    class Meta:
+        verbose_name = 'Количество ингредиентов'
+        verbose_name_plural = 'Количество ингредиентов'
+
 
 class Favourites(models.Model):
     user = models.ForeignKey(
