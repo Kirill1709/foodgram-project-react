@@ -11,8 +11,11 @@ router.register(r'tags', TagsViewSet, basename='tags')
 
 
 urlpatterns = [
-    path('recipes/download_shopping_cart/', download_cart),
-    path('recipes/<int:pk>/shopping_cart/', ShopingCartView.as_view()),
-    path('recipes/<int:pk>/favorite/', FavoriteRecipeView.as_view()),
+    path('recipes/download_shopping_cart/', download_cart,
+         name='download_cart'),
+    path('recipes/<int:pk>/shopping_cart/', ShopingCartView.as_view(),
+         name='shopping_cart'),
+    path('recipes/<int:pk>/favorite/', FavoriteRecipeView.as_view(),
+         name='favorite'),
     path('', include(router.urls)),
 ]

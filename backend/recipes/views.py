@@ -1,25 +1,26 @@
-from rest_framework import mixins, permissions, status, viewsets
+import io
+
+from django.http import FileResponse
+from django_filters.rest_framework import DjangoFilterBackend
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .filters import IngredientFilter, RecipeFilter
-
-from .models import (Favourites, Ingredients, IngredientsQuanity,
-                     Recipe, ShopingCart, Tag)
+from .mixins import ListDetailViewSet
+from .models import (Favourite, Ingredient, IngredientsQuanity, Recipe,
+                     ShopingCart, Tag)
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientSerizalizer,
                           RecipeCreateSerializer, ShopingCartSerializer,
                           TagSerializer)
-from django.http import FileResponse
-import io
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import inch
-from reportlab.lib.pagesizes import letter
-from rest_framework.decorators import api_view, permission_classes
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from django_filters.rest_framework import DjangoFilterBackend
 
 
 @api_view(['GET'])
@@ -33,16 +34,18 @@ def download_cart(request):
     textob.setFont("Times", 14)
     ingredient_list = {}
     ingredients = IngredientsQuanity.objects.filter(
-        recipe__in_shoping_cart__user=request.user.id)
+        recipe__in_shoping_cart__user=request.user.id).values_list(
+            'ingredient_id', 'quanity')
     for ingredient in ingredients:
-        name = ingredient.ingredient.name
+        ingredient_object = get_object_or_404(Ingredient, id=ingredient[0])
+        name = ingredient_object.name
         if name in ingredient_list:
-            ingredient_list[name]['quanity'] += ingredient.quanity
+            ingredient_list[name]['quanity'] += ingredient[1]
         else:
             value = {
                 'name': name,
-                'measurement_unit': ingredient.ingredient.measurement_unit,
-                'quanity': ingredient.quanity
+                'measurement_unit': ingredient_object.measurement_unit,
+                'quanity': ingredient[1]
             }
             ingredient_list[f'{name}'] = value
     textob.textLine("Количество продуктов для покупки:")
@@ -59,11 +62,6 @@ def download_cart(request):
     return FileResponse(buf, as_attachment=True, filename='shop_cart.pdf')
 
 
-class ListDetailViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                        viewsets.GenericViewSet):
-    pass
-
-
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeCreateSerializer
@@ -73,7 +71,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class IngredientsViewSet(ListDetailViewSet):
-    queryset = Ingredients.objects.all()
+    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerizalizer
     pagination_class = None
     filter_backends = (DjangoFilterBackend,)
@@ -98,14 +96,13 @@ class FavoriteRecipeView(APIView):
         }
         serializer = FavoriteRecipeSerializer(
             data=data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk):
         favorite = get_object_or_404(
-            Favourites, user=request.user.id, recipe=pk)
+            Favourite, user=request.user.id, recipe=pk)
         favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -121,10 +118,9 @@ class ShopingCartView(APIView):
         }
         serializer = ShopingCartSerializer(
             data=data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk):
         recipe = get_object_or_404(

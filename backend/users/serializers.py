@@ -1,6 +1,6 @@
+from recipes.models import IngredientsQuanity, Recipe
 from rest_framework import serializers
-
-from recipes.models import Recipe
+from rest_framework.generics import get_object_or_404
 
 from .models import Follow, User
 
@@ -15,11 +15,39 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
 
     def get_is_subscribed(self, obj):
-        user = self.context['request'].user
-        if (user.is_authenticated and
-                Follow.objects.filter(user=user, author=obj).exists()):
-            return True
-        return False
+        request = self.context['request']
+        if request is None:
+            return False
+        user = request.user
+        return (user.is_authenticated and
+                Follow.objects.filter(user=user, author=obj).exists())
+
+
+class IngredientQuanitySerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(
+        source='ingredient', read_only=True)
+    measurement_unit = serializers.SlugField(
+        source='ingredient.measurement_unit', read_only=True)
+    name = serializers.SlugField(source='ingredient.name', read_only=True)
+
+    class Meta:
+        model = IngredientsQuanity
+        fields = ('id', 'name', 'quanity', 'measurement_unit')
+
+
+class ResipeFollowSerializer(serializers.ModelSerializer):
+    tags = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    ingredients = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id', 'tags', 'ingredients', 'name',
+            'image', 'text', 'cooking_time')
+
+    def get_ingredients(self, obj):
+        data = obj.recipe.all()
+        return IngredientQuanitySerializer(data, many=True).data
 
 
 class FollowSerializer(serializers.ModelSerializer):
@@ -33,18 +61,18 @@ class FollowSerializer(serializers.ModelSerializer):
         model = User
 
     def get_is_subscribed(self, obj):
-        user = self.context['request'].user
-        if (user.is_authenticated and
-                Follow.objects.filter(user=user, author=obj).exists()):
-            return True
-        return False
+        request = self.context['request']
+        if request is None:
+            return False
+        user = request.user
+        return (user.is_authenticated and
+                Follow.objects.filter(user=user, author=obj).exists())
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj).count()
 
     def get_recipes(self, obj):
-        from recipes.serializers import ResipeFollowSerializer
-        user = User.objects.get(email=obj)
+        user = get_object_or_404(User, email=obj)
         return ResipeFollowSerializer(user.recipes.all(), many=True, context={
                 'request': self.context.get('request')
             }).data
