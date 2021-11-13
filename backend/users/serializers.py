@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
 
     def get_is_subscribed(self, obj):
-        request = self.context['request']
+        request = self.context.get('request')
         if request is None:
             return False
         user = request.user
@@ -61,7 +61,7 @@ class FollowSerializer(serializers.ModelSerializer):
         model = User
 
     def get_is_subscribed(self, obj):
-        request = self.context['request']
+        request = self.context.get('request')
         if request is None:
             return False
         user = request.user

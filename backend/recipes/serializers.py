@@ -60,7 +60,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         return AddIngredientQuanitySerializer(data, many=True).data
 
     def get_is_favorited(self, obj):
-        request = self.context['request']
+        request = self.context.get('request')
         if request is None:
             return False
         user = request.user
@@ -68,7 +68,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                 Favourite.objects.filter(user=user, recipe=obj).exists())
 
     def get_is_in_shopping_cart(self, obj):
-        request = self.context['request']
+        request = self.context.get('request')
         if request is None:
             return False
         user = request.user
@@ -96,9 +96,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(author=user, **validated_data)
-        for tag in tags:
-            recipe.tags.add(tag)
-        self.create_ingredients_list(ingredients, recipe)
+        self.create_ingredients_tags_list(ingredients, recipe, tags)
         recipe.save()
         return recipe
 
@@ -113,12 +111,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         IngredientsQuanity.objects.filter(recipe=recipe).delete()
-        self.create_ingredients_list(ingredients, recipe)
+        self.create_ingredients_tags_list(ingredients, recipe, tags)
         recipe.image.delete()
-        for tag in tags:
-            recipe.tags.add(tag)
         instance = super().update(instance, validated_data)
-        instance.save()
         return instance
 
     def validate(self, data):
@@ -144,13 +139,15 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 'Время приготовления должно быть больше 1')
         return value
 
-    def create_ingredients_list(self, ingredients, recipe):
+    def create_ingredients_tags_list(self, ingredients, recipe, tags):
         for ingredient in ingredients:
             id_ingredient = ingredient.get('id')
             quanity = ingredient.get('quanity')
             ingredient_id = get_object_or_404(Ingredient, pk=id_ingredient)
             IngredientsQuanity.objects.create(
                 recipe=recipe, ingredient=ingredient_id, quanity=quanity)
+            for tag in tags:
+                recipe.tags.add(tag)
 
 
 class FavoriteShowSerializer(RecipeSerializer):
