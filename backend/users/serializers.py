@@ -1,7 +1,6 @@
+from recipes.models import IngredientsQuanity, Recipe
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
-
-from recipes.models import IngredientsQuanity, Recipe
 
 from .models import Follow, User
 
@@ -20,8 +19,8 @@ class UserSerializer(serializers.ModelSerializer):
         if request is None:
             return False
         user = request.user
-        return (user.is_authenticated and
-                Follow.objects.filter(user=user, author=obj).exists())
+        return (user.is_authenticated
+                and Follow.objects.filter(user=user, author=obj).exists())
 
 
 class IngredientQuanitySerializer(serializers.ModelSerializer):
@@ -66,8 +65,8 @@ class FollowSerializer(serializers.ModelSerializer):
         if request is None:
             return False
         user = request.user
-        return (user.is_authenticated and
-                Follow.objects.filter(user=user, author=obj).exists())
+        return (user.is_authenticated
+                and Follow.objects.filter(user=user, author=obj).exists())
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj).count()
@@ -75,8 +74,8 @@ class FollowSerializer(serializers.ModelSerializer):
     def get_recipes(self, obj):
         user = get_object_or_404(User, email=obj)
         return ResipeFollowSerializer(user.recipes.all(), many=True, context={
-                'request': self.context.get('request')
-            }).data
+            'request': self.context.get('request')
+        }).data
 
 
 class FollowSubscribeSerializer(serializers.ModelSerializer):
@@ -91,11 +90,11 @@ class FollowSubscribeSerializer(serializers.ModelSerializer):
                 'Нельзя подписаться на самого себя!')
         if Follow.objects.filter(
             user=data['user'], author=data['author']
-                ).exists():
+        ).exists():
             raise serializers.ValidationError('Нельзя подписаться дважды')
         return data
 
     def to_representation(self, instance):
         return FollowSerializer(instance.author, context={
-                'request': self.context.get('request')
-            }).data
+            'request': self.context.get('request')
+        }).data

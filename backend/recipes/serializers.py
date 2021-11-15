@@ -1,7 +1,6 @@
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
-
 from users.serializers import UserSerializer
 
 from .models import (Favourite, Ingredient, IngredientsQuanity, Recipe,
@@ -66,16 +65,16 @@ class RecipeSerializer(serializers.ModelSerializer):
         if request is None:
             return False
         user = request.user
-        return (user.is_authenticated and
-                Favourite.objects.filter(user=user, recipe=obj).exists())
+        return (user.is_authenticated
+                and Favourite.objects.filter(user=user, recipe=obj).exists())
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
         if request is None:
             return False
         user = request.user
-        return (user.is_authenticated and
-                ShopingCart.objects.filter(user=user, recipe=obj).exists())
+        return (user.is_authenticated
+                and ShopingCart.objects.filter(user=user, recipe=obj).exists())
 
     def get_image(self, obj):
         return obj.image.url
@@ -107,8 +106,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return RecipeSerializer(instance, context={
-                'request': self.context.get('request')
-            }).data
+            'request': self.context.get('request')
+        }).data
 
     def update(self, instance, validated_data):
         recipe = get_object_or_404(Recipe, pk=instance.id)
@@ -175,15 +174,15 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if Favourite.objects.filter(
             user=data['user'], recipe=data['recipe']
-                ).exists():
+        ).exists():
             raise serializers.ValidationError(
                 'Рецепт уже находится в избранном')
         return data
 
     def to_representation(self, instance):
         return FavoriteShowSerializer(instance.recipe, context={
-                'request': self.context.get('request')
-            }).data
+            'request': self.context.get('request')
+        }).data
 
 
 class ShopingCartSerializer(serializers.ModelSerializer):
@@ -195,12 +194,12 @@ class ShopingCartSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if ShopingCart.objects.filter(
             user=data['user'], recipe=data['recipe']
-                ).exists():
+        ).exists():
             raise serializers.ValidationError(
                 'Рецепт уже находится в списке покупок')
         return data
 
     def to_representation(self, instance):
         return FavoriteShowSerializer(instance.recipe, context={
-                'request': self.context.get('request')
-            }).data
+            'request': self.context.get('request')
+        }).data
