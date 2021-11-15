@@ -1,6 +1,7 @@
-from recipes.models import IngredientsQuanity, Recipe
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
+
+from recipes.models import IngredientsQuanity, Recipe
 
 from .models import Follow, User
 
@@ -32,7 +33,7 @@ class IngredientQuanitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IngredientsQuanity
-        fields = ('id', 'name', 'quanity', 'measurement_unit')
+        fields = ('id', 'name', 'amount', 'measurement_unit')
 
 
 class ResipeFollowSerializer(serializers.ModelSerializer):

@@ -1,5 +1,7 @@
 import io
 
+import reportlab
+from django.conf import settings
 from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from reportlab.lib.pagesizes import letter
@@ -26,6 +28,7 @@ from .serializers import (FavoriteRecipeSerializer, IngredientSerizalizer,
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def download_cart(request):
+    reportlab.rl_config.TTFSearchPath.append(str(settings.BASE_DIR))
     buf = io.BytesIO()
     pdfmetrics.registerFont(TTFont('Times', 'times.ttf', 'UTF-8'))
     c = canvas.Canvas(buf, pagesize=letter, bottomup=0)
@@ -35,24 +38,24 @@ def download_cart(request):
     ingredient_list = {}
     ingredients = IngredientsQuanity.objects.filter(
         recipe__in_shoping_cart__user=request.user.id).values_list(
-            'ingredient_id', 'quanity')
+            'ingredient_id', 'amount')
     for ingredient in ingredients:
         ingredient_object = get_object_or_404(Ingredient, id=ingredient[0])
         name = ingredient_object.name
         if name in ingredient_list:
-            ingredient_list[name]['quanity'] += ingredient[1]
+            ingredient_list[name]['amount'] += ingredient[1]
         else:
             value = {
                 'name': name,
                 'measurement_unit': ingredient_object.measurement_unit,
-                'quanity': ingredient[1]
+                'amount': ingredient[1]
             }
             ingredient_list[f'{name}'] = value
     textob.textLine("Количество продуктов для покупки:")
     textob.textLine("")
     for line in ingredient_list:
         name = ingredient_list[f'{line}']['name']
-        quanity = ingredient_list[f'{line}']['quanity']
+        quanity = ingredient_list[f'{line}']['amount']
         measurement_unit = ingredient_list[f'{line}']['measurement_unit']
         textob.textLine(f"-  {name} ({measurement_unit})   —   {quanity} ")
     c.drawText(textob)

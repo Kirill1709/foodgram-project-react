@@ -1,6 +1,7 @@
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
+
 from users.serializers import UserSerializer
 
 from .models import (Favourite, Ingredient, IngredientsQuanity, Recipe,
@@ -30,16 +31,16 @@ class AddIngredientQuanitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IngredientsQuanity
-        fields = ('id', 'name', 'quanity', 'measurement_unit')
+        fields = ('id', 'name', 'amount', 'measurement_unit')
 
 
 class IngredientQuanitySerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
-    quanity = serializers.IntegerField()
+    amount = serializers.IntegerField()
 
     class Meta:
         model = IngredientsQuanity
-        fields = ('id', 'quanity')
+        fields = ('id', 'amount')
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -48,6 +49,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     ingredients = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -74,6 +76,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         user = request.user
         return (user.is_authenticated and
                 ShopingCart.objects.filter(user=user, recipe=obj).exists())
+
+    def get_image(self, obj):
+        return obj.image.url
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -121,8 +126,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         tags = data['tags']
         ingredient_id = []
         for ingredient in ingredients:
+            print(ingredient['amount'])
             ingredient_id.append(ingredient['id'])
-            if ingredient['quanity'] < 0:
+            if ingredient['amount'] < 0:
                 raise serializers.ValidationError(
                     'Количество ингридиента должно быть больше нуля')
         if len(ingredient_id) != len(set(ingredient_id)):
@@ -142,12 +148,13 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def create_ingredients_tags_list(self, ingredients, recipe, tags):
         for ingredient in ingredients:
             id_ingredient = ingredient.get('id')
-            quanity = ingredient.get('quanity')
+            amount = ingredient.get('amount')
+            print(ingredient.get('amount'))
             ingredient_id = get_object_or_404(Ingredient, pk=id_ingredient)
             IngredientsQuanity.objects.create(
-                recipe=recipe, ingredient=ingredient_id, quanity=quanity)
-            for tag in tags:
-                recipe.tags.add(tag)
+                recipe=recipe, ingredient=ingredient_id, amount=amount)
+        for tag in tags:
+            recipe.tags.add(tag)
 
 
 class FavoriteShowSerializer(RecipeSerializer):

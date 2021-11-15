@@ -14,9 +14,9 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'backend').split()
 
 
 INSTALLED_APPS = [
@@ -117,8 +117,10 @@ DJOSER = {
 }
 
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/back_static/'
+# STATIC_ROOT = os.path.join(BASE_DIR, 'back_static')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'back_static')]
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -134,5 +136,3 @@ USE_L10N = True
 USE_TZ = True
 
 AUTH_USER_MODEL = 'users.User'
-
-STATIC_URL = '/static/'

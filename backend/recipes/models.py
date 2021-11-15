@@ -1,5 +1,6 @@
 from django.core.validators import MinValueValidator
 from django.db import models
+
 from users.models import User
 
 
@@ -45,7 +46,7 @@ class Recipe(models.Model):
         related_name='recipes',
         verbose_name='Автор рецепта')
     name = models.CharField(max_length=150, verbose_name='Название рецепта')
-    image = models.ImageField(upload_to='media/', verbose_name='Изображение')
+    image = models.ImageField(verbose_name='Изображение')
     text = models.TextField(verbose_name='Описание')
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
@@ -75,7 +76,7 @@ class IngredientsQuanity(models.Model):
         on_delete=models.CASCADE,
         related_name='recipe',
         verbose_name='Рецепт')
-    quanity = models.PositiveSmallIntegerField(
+    amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
         validators=[MinValueValidator(1)])
 
