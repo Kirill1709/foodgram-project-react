@@ -117,8 +117,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         IngredientsQuanity.objects.filter(recipe=recipe).delete()
         self.create_ingredients_tags_list(ingredients, recipe, tags)
         recipe.image.delete()
-        instance = super().update(instance, validated_data)
-        return instance
+        return super().update(instance, validated_data)
 
     def validate(self, data):
         ingredients = data['ingredients']
