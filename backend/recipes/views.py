@@ -23,6 +23,7 @@ from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientSerizalizer,
                           RecipeCreateSerializer, ShopingCartSerializer,
                           TagSerializer)
+from .paginators import PageNumberPaginatorCustom
 
 
 @api_view(['GET'])
@@ -71,6 +72,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthorOrAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filter_class = RecipeFilter
+    pagination_class = PageNumberPaginatorCustom
 
 
 class IngredientsViewSet(ListDetailViewSet):
