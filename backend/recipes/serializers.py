@@ -124,7 +124,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         tags = data['tags']
         ingredient_id = []
         for ingredient in ingredients:
-            print(ingredient['amount'])
             ingredient_id.append(ingredient['id'])
             if ingredient['amount'] < 0:
                 raise serializers.ValidationError(
@@ -147,7 +146,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         for ingredient in ingredients:
             id_ingredient = ingredient.get('id')
             amount = ingredient.get('amount')
-            print(ingredient.get('amount'))
             ingredient_id = get_object_or_404(Ingredient, pk=id_ingredient)
             IngredientsQuanity.objects.create(
                 recipe=recipe, ingredient=ingredient_id, amount=amount)
