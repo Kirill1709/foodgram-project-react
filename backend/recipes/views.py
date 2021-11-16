@@ -19,11 +19,11 @@ from .filters import IngredientFilter, RecipeFilter
 from .mixins import ListDetailViewSet
 from .models import (Favourite, Ingredient, IngredientsQuanity, Recipe,
                      ShopingCart, Tag)
+from .paginators import PageNumberPaginatorCustom
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientSerizalizer,
                           RecipeCreateSerializer, ShopingCartSerializer,
                           TagSerializer)
-from .paginators import PageNumberPaginatorCustom
 
 
 @api_view(['GET'])
