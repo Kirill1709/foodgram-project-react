@@ -73,9 +73,12 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def get_recipes(self, obj):
         user = get_object_or_404(User, email=obj)
-        return ResipeFollowSerializer(user.recipes.all(), many=True, context={
-            'request': self.context.get('request')
-        }).data
+        recipes_limit = self.context.get(
+            'request').query_params.get('recipes_limit')
+        return ResipeFollowSerializer(
+            user.recipes.all()[:int(recipes_limit)], many=True, context={
+                'request': self.context.get('request')
+            }).data
 
 
 class FollowSubscribeSerializer(serializers.ModelSerializer):
