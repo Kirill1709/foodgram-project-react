@@ -10,7 +10,7 @@
 - Nginx
 - Github action
 
-### Зайдите на север и клонируйте проект 
+### Зайдите на сервер и клонируйте проект 
 ```
 ssh username@host
 git clone git@github.com:Kirill1709/foodgram-project-react.git
